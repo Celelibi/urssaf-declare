@@ -152,7 +152,8 @@ def dostuff(config, mailsender, invdir, payfile):
             msg += "Invoice %s for %s€ " % (inv.invnum, inv.amount)
             msg += "to be paid between %s and %s\n" % (inv.invdate, inv.duedate)
 
-    mailsender.message(config["Bank"]["email"], "Invoice matching", msg)
+    if msg != "":
+        mailsender.message(config["Bank"]["email"], "Invoice matching", msg)
 
 
 
