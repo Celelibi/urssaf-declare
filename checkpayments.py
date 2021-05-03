@@ -138,8 +138,10 @@ def dostuff(config, mailsender, invdir, payfile):
         payments.add_payment(inv, t)
 
     # Send a mail
+    titles = []
     msg = ""
     if len(matched) > 0:
+        titles.append("Invoice matching")
         msg += "The following invoices and bank transactions have been matched:\n"
         for inv, t in matched:
             msg += "Invoice %s: %s€ " % (inv.invnum, inv.amount)
@@ -149,13 +151,17 @@ def dostuff(config, mailsender, invdir, payfile):
             msg += "\n"
 
     if len(overdue) > 0:
+        titles.append("Overdue invoice")
+        if len(overdue) > 1:
+            titles[-1] += "s"
+
         msg += "The following invoices are overdue:\n"
         for inv in overdue:
             msg += "Invoice %s for %s€ " % (inv.invnum, inv.amount)
             msg += "to be paid between %s and %s\n" % (inv.invdate, inv.duedate)
 
     if msg != "":
-        mailsender.message(config["Bank"]["email"], "Invoice matching", msg)
+        mailsender.message(config["Bank"]["email"], " + ".join(titles), msg)
 
 
 
