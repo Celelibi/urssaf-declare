@@ -11,9 +11,10 @@ import locale
 import logging
 import traceback
 
+import weboob.core
+
 import mailer
 import paymentfile
-import weboob.core
 
 
 
