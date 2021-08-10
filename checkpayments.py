@@ -95,7 +95,8 @@ def match_transactions(invoices, trans):
     matched = []
     for t in trans:
         for inv in invoices:
-            if t.amount == inv.amount and t.date >= inv.invdate and t.date <= inv.duedate:
+            maxdate = inv.duedate + datetime.timedelta(days=10)
+            if t.amount == inv.amount and t.date >= inv.invdate and t.date <= maxdate:
                 matched.append((inv, t))
                 invoices.remove(inv)
                 break
