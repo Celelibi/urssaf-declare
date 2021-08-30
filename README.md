@@ -19,7 +19,9 @@ et les factures émises. Cette correspondance est ensuite écrite dans
 L'utilisation prévue est de lancer ce programme régulièrement afin de générer le
 *paymentfile*. Le matching entre les factures et les transactions bancaires
 étant approximatif, il est important de vérifier manuellement que la
-correspondance est correcte et de corriger le *paymentfile* si nécessaire.
+correspondance est correcte et de corriger le *paymentfile* si nécessaire. Afin
+de ne pas oublier, le programme envoie un mail automatiquement lorsqu'une
+facture a été matchée avec une transaction.
 
 Le programme peut être lancé par une entrée cron comme suit :
 
@@ -51,8 +53,8 @@ Pour mettre en correspondance les factures et transactions, il faut que le
 montant corresponde exactement et que la date de la transaction se trouve entre
 la date d'établissement de la facture et la date limite de paiement. En cas
 d'ambiguïté, les plus anciennes transactions sont matchées avec les plus
-anciennes factures. Les factures payées hors-délais ne seront pas matchées et
-devront être ajoutées manuellement au fichier.
+anciennes factures. Les factures payées hors-délais (plus quelques jours) ne
+seront pas matchées et devront être ajoutées manuellement au fichier.
 
 Le *paymentfile* est aussi utilisé pour ignorer les factures et les transactions
 déjà mises en correspondances avec une transaction ou facture réciproquement.
@@ -181,12 +183,14 @@ factures. Elle est aussi utilisée pour déclarer le montant du chiffre d'affair
 
 ### Numéro de facture
 Le numéro de facture sert à retrouver quelle facture a été payée afin de ne pas
-chercher à nouveau la transaction qui lui correspondent.
+chercher à nouveau la transaction qui lui corresponde.
 
 ### Montant
 Le montant de la transaction bancaire. Il est utilisé pour identifier la
-transaction. Il sera en général identique au montant de la facture, mais aucune
-vérification n'est faite en ce sens afin de permettre plus de flexibilité.
+transaction afin de ne pas l'associer à une deuxième facture. Il sera en général
+identique au montant de la facture. Il est possible de mettre en correspondance
+manuellement une transaction avec une facture d'un montant différent. Ceci peut
+être utile si une facture a été payée en plusieurs transactions par exemple.
 
 ### Libellé
 Libellé de la transaction bancaire. Il est utilisé pour identifier la
