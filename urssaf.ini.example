@@ -11,3 +11,8 @@ login = Login
 password = 123456
 accountno = 12345678001
 email = something@example.com
+
+[URSSAF]
+login = 123456789012345
+password = P4ssw0rd
+email = something@example.com
