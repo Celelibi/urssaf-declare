@@ -1,10 +1,9 @@
 # Programmes URSSAF
 
-Il n'y a pour le moment qu'un seul programme. Celui qui effectue du
-rapprochement bancaire afin de déterminer le chiffre d'affaire réalisé.
-
-Par la suite, un autre programme sera chargé de déclarer ce chiffre d'affaire
-automatiquement sur le site de l'URSSAF.
+Il y a deux programmes dans ce repository. Le premier effectue le rapprochement
+bancaire afin de déterminer le chiffre d'affaire réalisé. Le deuxième est chargé
+de déclarer ce chiffre d'affaire automatiquement sur le site de l'URSSAF et paye
+avec un mandat enregistré sur le site.
 
 
 ## Rapprochement bancaire
@@ -67,6 +66,47 @@ correspondance d'une même transaction avec plusieurs factures. Il ne semble pas
 y avoir de manière fiable d'identifier les transactions de manière unique, ni de
 déterminer si une transaction est *"finalisée"*.
 
+
+## Déclaration et paiement
+
+Le programme `declare.py` lit le fichier de paiement des factures, déclare
+auprès de l'URSSAF les paiements reçus durant la période actuellement à
+déclarer. Il paye également avec l'un des mandats de prélèvement enregistrés sur
+le site de l'URSSAF.
+
+Le programme n'offre actuellement pas le choix du mandat à utiliser pour payer
+ni la possibilité d'enregistrer un nouveau mandat. Ces actions doivent être
+effectées depuis le site web de l'URSSAF. Il ne gère pas non plus la période
+initiale où les déclarations doivent être décalées de 90 jours après le début de
+l'activité.
+
+### Utilisation
+
+L'utilisation prévue est de lancer ce programme régulièrement avec par exemple
+une entrée cron comme suit :
+
+    0 8 10 * * $HOME/code/urssaf_declare/declare.py path/to/urssaf.ini --payment path/to/paymentfile.txt --ca-pdf-dir dir/for/pdfs
+
+Le premier argument est le chemin vers le même fichier de configuration que le
+programme de rapprochement bancaire. Sa syntaxe est détaillée plus loin.
+
+L'option `--payment` est identique au programme de rapprochement bancaire et
+sert à indiquer le chemin vers le *paymentfile*. Ce fichier contient le matching
+entre les factures et les transactions. Il est utilisé en lecture seule par ce
+programme.
+
+L'option `--ca-pdf-dir` indique le répertoire où sera stocké le PDF justifiant
+de la déclaration et du paiement de cotisations. Notez que si le fichier existe
+déjà, son écriture sera abandonnée. Le fichier est également envoyé par mail à
+l'adresse indiquée dans la configuration.
+
+D'autres options sont disponibles, notamment `--already-paid-noop` afin de ne
+rien faire et ne pas émettre d'erreur si la déclaration et le paiement ont déjà
+été effectués. Ceci peut servir à relancer automatiquement le programme
+plusieurs fois par mois au cas où la première exécution aurait planté, notamment
+à cause du site de l'URSSAF.
+
+
 # Fichier de configuration
 
 Ces programmes utilisent le module python `configparser` pour parser le fichier
@@ -89,6 +129,11 @@ weboobbackendargs = {"website": "www.ca-tourainepoitou.fr"}
 login = Login
 password = 123456
 accountno = 12345678001
+email = something@example.com
+
+[URSSAF]
+login = 123456789012345
+password = P4ssw0rd
 email = something@example.com
 ```
 
@@ -117,6 +162,14 @@ Ensuite, la section `Bank` définit l'accès au compte bancaire.
   correspondance avec les factures.
 - `email` définit l'adresse mail où envoyer le résumé du rapprochement bancaire
   s'il a trouvé un nouveau matching.
+
+## Section `[URSSAF]`
+- `login` et `password` définissent le login et le mot de passe à utiliser pour
+  se loguer sur le site de l'URSSAF.
+- `email` définit l'adresse mail où envoyer le résumé de la déclaration et du
+  paiement. Ce mail sera accompagné d'un fichier JSON tel que renvoyé par le
+  serveur lors de la validation du paiement et du PDF jusitifiant de la
+  déclaration.
 
 # Fichiers `inv` (résumés de factures)
 Chaque fichier `.inv` contient les informations résumées d'une facture donnée.
@@ -148,7 +201,7 @@ bénéfices commerciaux et non-commerciaux.
 
 # Paymentfile
 Le *paymentfile* liste les factures payées avec la transaction associée. Il est
-écrit par le programme de rapprochement bancaire. Il sera lu par le programme de
+écrit par le programme de rapprochement bancaire. Il est lu par le programme de
 déclaration de chiffre d'affaire et est aussi lu par le programme de
 rapprochement bancaire afin de ne pas matcher deux fois une même facture ou une
 même transaction.
