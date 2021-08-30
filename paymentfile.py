@@ -96,3 +96,6 @@ class PaymentFile(object):
         with open(self._path, "a") as fp:
             logging.info("Adding to file %r payment %s", self._path, p)
             print(p, file=fp)
+
+    def payments_in_range(self, begin, end):
+        return [p for p in self._payments if p.date >= begin and p.date < end]
