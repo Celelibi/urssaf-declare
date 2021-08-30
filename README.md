@@ -25,7 +25,7 @@ facture a été matchée avec une transaction.
 
 Le programme peut être lancé par une entrée cron comme suit :
 
-    0 8 3 */5 * * dir/to/checkpayment.py dir/to/urssaf.ini --invoice-dir path/to/invoices/dir --payment dir/to/paymentfile.txt
+    0 8 */5 * * dir/to/checkpayment.py dir/to/urssaf.ini --invoice-dir path/to/invoices/dir --payment dir/to/paymentfile.txt
 
 Le premier argument est le chemin vers le fichier de configuration dont la
 syntaxe est détaillée plus loin.
