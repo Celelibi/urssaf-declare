@@ -11,7 +11,7 @@ import locale
 import logging
 import traceback
 
-import weboob.core
+import woob.core
 
 import mailer
 import paymentfile
@@ -72,11 +72,11 @@ def read_invoices(invdir):
 
 
 def bank_transactions(cfg, since=None):
-    class SilentProgress(weboob.core.repositories.PrintProgress):
+    class SilentProgress(woob.core.repositories.PrintProgress):
         def progress(self, percent, message):
             pass
 
-    boob = weboob.core.Weboob()
+    boob = woob.core.Weboob()
     boob.update(SilentProgress())
     args = json.loads(cfg["weboobbackendargs"])
     args.update({"login": cfg["login"], "password": cfg["password"]})
