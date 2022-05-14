@@ -124,8 +124,8 @@ smtpuser = youraccount@gmail.com
 smtppwd = GMa1lP4s5W0rD
 
 [Bank]
-weboobbackend = cragr
-weboobbackendargs = {"website": "www.ca-tourainepoitou.fr"}
+woobbackend = cragr
+woobbackendargs = {"website": "www.ca-tourainepoitou.fr"}
 login = Login
 password = 123456
 accountno = 12345678001
@@ -148,14 +148,14 @@ Ensuite, la section `Bank` définit l'accès au compte bancaire.
   pour se connecter au serveur SMTP.
 
 ## Section `[Bank]`
-- `weboobbackend` définit le nom du backend Weboob à utiliser. Par exemple,
+- `woobbackend` définit le nom du backend Woob à utiliser. Par exemple,
   `crgr` pour le crédit agricole. D'autres backends sont supportés pour d'autres
-  banques. La liste est accessible sur le site de Weboob.
-  <https://weboob.org/modules>
-- `weboobbackendargs` est un json définissant les arguments supplémentaires
+  banques. La liste est accessible sur le site de Woob.
+  <https://woob.tech/modules>
+- `woobbackendargs` est un json définissant les arguments supplémentaires
   nécessaires lors de l'initialisation du backend en plus du login et du mot de
   passe. Cette information ne semble pas être bien documentée. Il faudra
-  probablement lire le code source de Weboob.
+  probablement lire le code source de Woob.
 - `login` et `password` définissent le login et le mot de passe à utiliser pour
   se connecter sur le site de la banque.
 - `accountno` donne le numéro du compte dont les transactions seront mises en

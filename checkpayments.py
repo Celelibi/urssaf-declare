@@ -76,11 +76,19 @@ def bank_transactions(cfg, since=None):
         def progress(self, percent, message):
             pass
 
+    # Just for compatibility
+    if "woobbackend" not in cfg and "weboobbackend" in cfg:
+        cfg["woobbackend"] = cfg["weboobbackend"]
+        del cfg["weboobbackend"]
+    if "woobbackendargs" not in cfg and "weboobbackendargs" in cfg:
+        cfg["woobbackendargs"] = cfg["weboobbackendargs"]
+        del cfg["weboobbackendargs"]
+
     boob = woob.core.Weboob()
     boob.update(SilentProgress())
-    args = json.loads(cfg["weboobbackendargs"])
+    args = json.loads(cfg["woobbackendargs"])
     args.update({"login": cfg["login"], "password": cfg["password"]})
-    bank = boob.load_backend(cfg["weboobbackend"], None, args)
+    bank = boob.load_backend(cfg["woobbackend"], None, args)
     account = bank.get_account(cfg["accountno"])
 
     trans = bank.iter_history(account)
