@@ -133,9 +133,13 @@ def main():
 
     smtphost = config["SMTP"]["smtphost"]
     smtpport = config["SMTP"].get("smtpport")
+    smtpauth = config["SMTP"].get("smtpauthmethod")
     smtpuser = config["SMTP"].get("smtpuser")
     smtppassword = config["SMTP"].get("smtppwd")
-    mailsender = mailer.Mailer(smtphost, smtpport, smtpuser, smtppassword)
+    smtpoauthcmd = config["SMTP"].get("smtpoauthtokencmd")
+
+    mailsender = mailer.Mailer(smtphost, smtpport, smtpauth,
+                               smtpuser, smtppassword, smtpoauthcmd)
 
     try:
         try:
