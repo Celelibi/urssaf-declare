@@ -112,7 +112,7 @@ def main():
     parser.add_argument("cfgfile", metavar="configfile", help="Fichier de configuration")
     parser.add_argument("--payment", "-p", metavar="file", help="Fichier des factures payées")
     parser.add_argument("--ca-pdf-dir", "-c", metavar="dir", default=".", help="Répertoire où enregistrer le PDF de déclaration du chiffre d'affaire")
-    parser.add_argument("--already-paid-noop", action="store_true", help="Ne fait rien si c'est déjà payé")
+    parser.add_argument("--correctly-paid-noop", action="store_true", help="Ne fait rien si c'est déjà payé")
     parser.add_argument("--redo-declaration", action="store_true", help="Refait la déclaration si elle existe déjà")
     parser.add_argument("--no-error-mail", action="store_true", help="N'envoie pas de mail pour les erreurs")
     parser.add_argument("--verbose", "-v", action="count", help="Augmente le niveau de verbosité")
@@ -123,7 +123,7 @@ def main():
     verbose = args.verbose
     payfile = args.payment
     capdfdir = args.ca_pdf_dir
-    paidnoop = args.already_paid_noop
+    paidnoop = args.correctly_paid_noop
     redo = args.redo_declaration
     errormail = not args.no_error_mail
 
