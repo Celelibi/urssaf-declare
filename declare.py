@@ -66,6 +66,8 @@ def dostuff(config, mailsender, payfile, pdfdir):
     begin = (end - datetime.timedelta(days=1)).replace(day=1)
     total, msg = get_payments(payfile, begin, end)
 
+    logging.debug("Declaration summary:\n%s", msg)
+
     # Declare on the URSSAF
     urssafcfg = config["URSSAF"]
     urss = urssaf.URSSAF(urssafcfg["login"], urssafcfg["password"])
