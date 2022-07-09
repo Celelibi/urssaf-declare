@@ -260,7 +260,7 @@ class URSSAF(object):
 
 
 
-    def get_context(self):
+    def get_context(self, update=False):
         if self._context is not None:
             return self._context
 
@@ -278,7 +278,7 @@ class URSSAF(object):
         declexpected = (len(ctx["data"]["declaration"]["certif"]) <= 2)
         paymentexpected = (ctx["data"]["paiement"]["attendu"] == "true")
 
-        if not (declexpected or paymentexpected):
+        if not (declexpected or paymentexpected or update):
             raise AlreadyPaidError("Already declared and paid. Use website for correction.")
 
         self._context = ctx
@@ -295,17 +295,18 @@ class URSSAF(object):
 
 
 
-    def declare(self, amount):
+    def declare(self, amount, update=False):
         if self._state is not None:
             if "error" in self._state:
                 raise RuntimeError("Can't declare anything while in state %r" % self._state)
             logging.warning("Restarting declaration from state %s", self._state)
 
-        ctx = self.get_context()
-        ctx["data"]["declaration"]["ass"]["ass_autres"] = str(round(amount))
+        ctx = self.get_context(update)
+        amount = str(round(amount))
+        ctx["data"]["declaration"]["ass"]["ass_autres"] = amount
 
         # submit form
-        logging.info("Declaring %d euros", amount)
+        logging.info("Declaring %s euros", amount)
         self.post_declaration_context("/declaration/calculer")
 
         # Extract interesting informations

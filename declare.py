@@ -60,7 +60,7 @@ def tax_message(taxes, taxes_total, mandate):
 
 
 
-def dostuff(config, mailsender, payfile, pdfdir):
+def dostuff(config, mailsender, payfile, pdfdir, redo=False):
     # Range of dates to consider
     end = datetime.date.today().replace(day=1)
     begin = (end - datetime.timedelta(days=1)).replace(day=1)
@@ -78,7 +78,7 @@ def dostuff(config, mailsender, payfile, pdfdir):
     # TODO: Maybe allow to choose which mandate to pay from?
     mandate = urss.get_mandates()[0]
 
-    taxes, taxes_total = urss.declare(total)
+    taxes, taxes_total = urss.declare(total, redo)
     msg += tax_message(taxes, taxes_total, mandate)
     logging.debug("Message to be send by e-mail:\n%s", msg)
 
@@ -91,7 +91,8 @@ def dostuff(config, mailsender, payfile, pdfdir):
     pdfpath = "%s/%s" % (pdfdir, pdfname)
 
     logging.info("Saving PDF declaration as %r", pdfpath)
-    with open(pdfpath, "xb") as fp:
+    mode = "wb" if redo else "xb"
+    with open(pdfpath, mode) as fp:
         fp.write(pdf)
 
     ctxjson = json.dumps(ctx, indent=8).encode("utf-8")
@@ -112,6 +113,7 @@ def main():
     parser.add_argument("--payment", "-p", metavar="file", help="Fichier des factures payées")
     parser.add_argument("--ca-pdf-dir", "-c", metavar="dir", default=".", help="Répertoire où enregistrer le PDF de déclaration du chiffre d'affaire")
     parser.add_argument("--already-paid-noop", action="store_true", help="Ne fait rien si c'est déjà payé")
+    parser.add_argument("--redo-declaration", action="store_true", help="Refait la déclaration si elle existe déjà")
     parser.add_argument("--no-error-mail", action="store_true", help="N'envoie pas de mail pour les erreurs")
     parser.add_argument("--verbose", "-v", action="count", help="Augmente le niveau de verbosité")
 
@@ -122,6 +124,7 @@ def main():
     payfile = args.payment
     capdfdir = args.ca_pdf_dir
     paidnoop = args.already_paid_noop
+    redo = args.redo_declaration
     errormail = not args.no_error_mail
 
     if verbose is not None:
@@ -145,7 +148,7 @@ def main():
 
     try:
         try:
-            dostuff(config, mailsender, payfile, capdfdir)
+            dostuff(config, mailsender, payfile, capdfdir, redo)
         except urssaf.AlreadyPaidError:
             if paidnoop:
                 logging.info("Already declared and paid. Ignoring.")
