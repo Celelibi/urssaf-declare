@@ -260,7 +260,7 @@ class URSSAF(object):
 
 
 
-    def get_context(self, update=False):
+    def get_context(self):
         if self._context is not None:
             return self._context
 
@@ -274,12 +274,6 @@ class URSSAF(object):
         if mode not in ("nouvelle", "existante"):
             logging.warning("Unknown context mode %r, won't declare anything with this", mode)
             self._state = "mode_error"
-
-        declexpected = (len(ctx["data"]["declaration"]["certif"]) <= 2)
-        paymentexpected = (ctx["data"]["paiement"]["attendu"] == "true")
-
-        if not (declexpected or paymentexpected or update):
-            raise AlreadyPaidError("Already declared and paid. Use website for correction.")
 
         self._context = ctx
         return ctx
@@ -301,8 +295,15 @@ class URSSAF(object):
                 raise RuntimeError("Can't declare anything while in state %r" % self._state)
             logging.warning("Restarting declaration from state %s", self._state)
 
-        ctx = self.get_context(update)
         amount = str(round(amount))
+        ctx = self.get_context()
+
+        declexpected = (len(ctx["data"]["declaration"]["certif"]) <= 2)
+        paymentexpected = (ctx["data"]["paiement"]["attendu"] == "true")
+
+        if not (declexpected or paymentexpected or update):
+            raise AlreadyPaidError("Already declared and paid. Not redoing anything.")
+
         ctx["data"]["declaration"]["ass"]["ass_autres"] = amount
 
         # submit form
