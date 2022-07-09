@@ -60,7 +60,7 @@ def tax_message(taxes, taxes_total, mandate):
 
 
 
-def dostuff(config, mailsender, payfile, pdfdir, redo=False):
+def dostuff(config, mailsender, payfile, pdfdir, paidnoop=False, redo=False):
     # Range of dates to consider
     end = datetime.date.today().replace(day=1)
     begin = (end - datetime.timedelta(days=1)).replace(day=1)
@@ -78,7 +78,7 @@ def dostuff(config, mailsender, payfile, pdfdir, redo=False):
     # TODO: Maybe allow to choose which mandate to pay from?
     mandate = urss.get_mandates()[0]
 
-    taxes, taxes_total = urss.declare(total, redo)
+    taxes, taxes_total = urss.declare(total, paidnoop, redo)
     msg += tax_message(taxes, taxes_total, mandate)
     logging.debug("Message to be send by e-mail:\n%s", msg)
 
@@ -148,7 +148,7 @@ def main():
 
     try:
         try:
-            dostuff(config, mailsender, payfile, capdfdir, redo)
+            dostuff(config, mailsender, payfile, capdfdir, paidnoop, redo)
         except urssaf.AlreadyPaidError:
             if paidnoop:
                 logging.info("Already declared and paid. Ignoring.")

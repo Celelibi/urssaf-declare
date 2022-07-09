@@ -15,6 +15,9 @@ import lxml.html
 class AlreadyPaidError(Exception):
     pass
 
+class PaidIncorrectAmountError(Exception):
+    pass
+
 
 
 def random_string(length):
@@ -289,7 +292,7 @@ class URSSAF(object):
 
 
 
-    def declare(self, amount, update=False):
+    def declare(self, amount, ok_noop=False, update=False):
         if self._state is not None:
             if "error" in self._state:
                 raise RuntimeError("Can't declare anything while in state %r" % self._state)
@@ -300,9 +303,16 @@ class URSSAF(object):
 
         declexpected = (len(ctx["data"]["declaration"]["certif"]) <= 2)
         paymentexpected = (ctx["data"]["paiement"]["attendu"] == "true")
+        decl_done = not (declexpected or paymentexpected)
 
-        if not (declexpected or paymentexpected or update):
-            raise AlreadyPaidError("Already declared and paid. Not redoing anything.")
+        if decl_done:
+            declared_prev = ctx["data"]["declaration"]["ass"]["ass_autres"]
+            if declared_prev == amount:
+                if not update or ok_noop:
+                    raise AlreadyPaidError("Already declared and paid the right amount. Not redoing anything.")
+            elif not update:
+                raise PaidIncorrectAmountError("Declared %s instead of %s, should redo the declaration." % (declared_prev, amount))
+
 
         ctx["data"]["declaration"]["ass"]["ass_autres"] = amount
 
