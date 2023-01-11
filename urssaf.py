@@ -26,6 +26,19 @@ def random_string(length):
 
 
 
+def matching_braces(s):
+    assert s[0] == "{"
+    cnt = 0
+    for i, c in enumerate(s):
+        if c == "{":
+            cnt += 1
+        elif c == "}":
+            cnt -= 1
+            if cnt == 0:
+                return s[:i + 1]
+
+
+
 class URSSAF(object):
     baseurl = "https://www.autoentrepreneur.urssaf.fr/"
     servicesurl = baseurl + "services/"
@@ -110,7 +123,7 @@ class URSSAF(object):
         mainjs = self._get_mainjs()
         oauthidx = mainjs.index("oauth:")
         cfgidx = mainjs.rindex("{", 0, oauthidx)
-        oauthcfg = mainjs[cfgidx:]
+        oauthcfg = matching_braces(mainjs[cfgidx:])
         oauthcfg = re.sub(r'(?<=[{,])(\w*):', '"\\1":', oauthcfg)
 
         # TODO Extract r.version from the js too
