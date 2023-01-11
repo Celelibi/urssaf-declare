@@ -131,7 +131,9 @@ class URSSAF(object):
             "!0": "true",
             "!1": "false",
             "o": '"%s"' % self.servicesurl,
-            "r.version": '"2.9.3"'
+            "r.version": '"4.3.7"',
+            "s": '"%s"' % config["DATE_BASCULE_GUICHET_UNIQUE"],
+            "a": '"%s"' % config["URL_GUICHET_UNIQUE"]
         }
         replace.update({"i." + k: '"%s"' % v for k, v in config.items()})
 
