@@ -159,9 +159,11 @@ def dostuff(config, mailsender, invdir, payfile):
             msg += "\n"
 
     if len(overdue) > 0:
-        titles.append("Overdue invoice")
-        if len(overdue) > 1:
-            titles[-1] += "s"
+        amount = sum(inv.amount for inv in overdue)
+        if len(overdue) == 1:
+            titles.append("Overdue invoice (%s€)" % amount)
+        else:
+            titles.append("%d overdue invoices (%s€)" % (len(overdue), amount))
 
         msg += "The following invoices are overdue:\n"
         for inv in overdue:
