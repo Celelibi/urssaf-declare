@@ -149,7 +149,8 @@ def dostuff(config, mailsender, invdir, payfile):
     titles = []
     msg = ""
     if len(matched) > 0:
-        titles.append("Invoice matching")
+        amount = sum(inv.amount for inv, _ in matched)
+        titles.append("Invoice matching (%s€)" % amount)
         msg += "The following invoices and bank transactions have been matched:\n"
         for inv, t in matched:
             msg += "Invoice %s: %s€ " % (inv.invnum, inv.amount)
