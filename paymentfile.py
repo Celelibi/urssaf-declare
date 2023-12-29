@@ -66,7 +66,13 @@ class PaymentFile(object):
             self._payments.sort(key=lambda p: p.date)
 
     def filter_invoices(self, invoices):
-        invoicesdict = {inv.invnum: inv for inv in invoices}
+        invoicesdict = {}
+        for inv in invoices:
+            if inv.amount > 0:
+                invoicesdict[inv.invnum] = inv
+            else:
+                logging.debug("Ignoring 0 amount invoice: %s", inv)
+
         for p in self._payments:
             if p.invnum in invoicesdict:
                 logging.debug("Filtering out already paid invoice: %s", invoicesdict[p.invnum])
