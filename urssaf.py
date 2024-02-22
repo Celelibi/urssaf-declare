@@ -130,14 +130,14 @@ class URSSAF(object):
         replace = {
             "!0": "true",
             "!1": "false",
-            "o": '"%s"' % self.servicesurl,
+            "o": f'"{self.servicesurl}"',
             "r.version": '"5.3.10"',
-            "s": '"%s"' % config["DATE_BASCULE_GUICHET_UNIQUE"],
-            "a": '"%s"' % config["URL_GUICHET_UNIQUE"],
-            "u": '"%s"' % config["URL_MODIFIER_ACTIVITE"],
-            "c": '"%s"' % config["URL_CESSER_ACTIVITE"],
+            "s": f'"{config["DATE_BASCULE_GUICHET_UNIQUE"]}"',
+            "a": f'"{config["URL_GUICHET_UNIQUE"]}"',
+            "u": f'"{config["URL_MODIFIER_ACTIVITE"]}"',
+            "c": f'"{config["URL_CESSER_ACTIVITE"]}"',
         }
-        replace.update({"i." + k: '"%s"' % v for k, v in config.items()})
+        replace.update({"i." + k: f'"{v}"' for k, v in config.items()})
 
         search = r'|'.join(r'(?<!\w)' + re.escape(s) + r'(?!\w)' for s in replace.keys())
         oauthcfg = re.sub(search, lambda m: replace[m.group(0)], oauthcfg)
