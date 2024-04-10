@@ -48,6 +48,16 @@ class URSSAF(object):
 
     def __init__(self, login, pwd):
         self._session = requests.Session()
+        retry_status = {
+            403, 408, 413, 429, 499,
+            500, 501, 502, 503, 504, 509, 511,
+            520, 521, 522, 523, 524, 525, 526, 527
+        }
+        r = requests.adapters.Retry(total=3, backoff_factor=1, allowed_methods=None, status_forcelist=retry_status)
+        a = requests.adapters.HTTPAdapter(max_retries=r)
+        self._session.mount("http://", a)
+        self._session.mount("https://", a)
+
         self._config = None
         self._main_config = None
         self._access_token = None
@@ -55,6 +65,7 @@ class URSSAF(object):
         self._mandates = None
         self._state = None
         self._context = None
+
         self._login(login, pwd)
 
     def request(self, method, url, *args, **kwargs):
