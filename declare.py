@@ -8,6 +8,7 @@ import locale
 import logging
 import logging.config
 import os
+import subprocess
 import sys
 import traceback
 
@@ -73,6 +74,17 @@ def dostuff(config, mailsender, payfile, pdfdir, paidnoop=False, redo=False):
     begin = (end - datetime.timedelta(days=1)).replace(day=1)
     total, msg = get_payments(payfile, begin, end)
 
+    pdfname = begin.strftime("CA_%Y_%m.pdf")
+    pdfpath = "%s/%s" % (pdfdir, pdfname)
+    haspdf = not os.path.isfile(pdfpath)
+    if haspdf:
+        filetype = subprocess.check_output(["file", "-b", "--mime-type", pdfpath])
+        ispdfapdf = filetype.startswith(b"application/pdf")
+        if not ispdfapdf:
+            logging.warning("File %r does not look like a PDF. Has mime type %r", pdfpath, filetype)
+    else:
+        ispdfapdf = None
+
     logging.debug("Declaration summary:\n%s", msg)
 
     # Declare on the URSSAF
@@ -85,7 +97,21 @@ def dostuff(config, mailsender, payfile, pdfdir, paidnoop=False, redo=False):
     # TODO: Maybe allow to choose which mandate to pay from?
     mandate = urss.get_mandates()[0]
 
-    taxes, taxes_total = urss.declare(total, paidnoop, redo)
+    try:
+        taxes, taxes_total = urss.declare(total, paidnoop, redo)
+    except (urssaf.AlreadyPaidError, urssaf.PaidIncorrectAmountError):
+        if ispdfapdf:
+            raise
+        logging.warning("Previous declaration failed unexpectedly.")
+        if haspdf:
+            logging.warning("Declaration went ok, but the PDF summary is corrupted.")
+        else:
+            logging.warning("Declaration went ok, but we didn't get the PDF summary.")
+
+        logging.warning("Redoing it from scratch.")
+        redo = True
+        taxes, taxes_total = urss.declare(total, paidnoop, redo)
+
     msg += tax_message(taxes, taxes_total, mandate)
     logging.debug("Message to be send by e-mail:\n%s", msg)
 
@@ -94,8 +120,6 @@ def dostuff(config, mailsender, payfile, pdfdir, paidnoop=False, redo=False):
 
     # We don't need to use the same session to download the PDF, but it doesn't hurt
     pdf = urss.get(pdfurl).content
-    pdfname = begin.strftime("CA_%Y_%m.pdf")
-    pdfpath = "%s/%s" % (pdfdir, pdfname)
 
     logging.info("Saving PDF declaration as %r", pdfpath)
     mode = "wb" if redo else "xb"
