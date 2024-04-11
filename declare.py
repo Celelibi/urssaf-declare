@@ -68,7 +68,7 @@ def tax_message(taxes, taxes_total, mandate):
 
 
 
-def dostuff(config, mailsender, payfile, pdfdir, paidnoop=False, redo=False):
+def dostuff(config, mailsender, payfile, pdfdir, redo="never"):
     # Range of dates to consider
     end = datetime.date.today().replace(day=1)
     begin = (end - datetime.timedelta(days=1)).replace(day=1)
@@ -76,14 +76,18 @@ def dostuff(config, mailsender, payfile, pdfdir, paidnoop=False, redo=False):
 
     pdfname = begin.strftime("CA_%Y_%m.pdf")
     pdfpath = "%s/%s" % (pdfdir, pdfname)
-    haspdf = not os.path.isfile(pdfpath)
-    if haspdf:
+
+    if os.path.isfile(pdfpath):
         filetype = subprocess.check_output(["file", "-b", "--mime-type", pdfpath])
-        ispdfapdf = filetype.startswith(b"application/pdf")
-        if not ispdfapdf:
+        filetype = filetype.decode().rstrip()
+        if not filetype.startswith("application/pdf"):
             logging.warning("File %r does not look like a PDF. Has mime type %r", pdfpath, filetype)
-    else:
-        ispdfapdf = None
+            logging.warning("Redoing declaration from scratch.")
+            redo = "always"
+
+    elif redo != "always":
+        logging.warning("No PDF summary. Forcing the redeclaration in order to complete it.")
+        redo = "always"
 
     logging.debug("Declaration summary:\n%s", msg)
 
@@ -97,21 +101,7 @@ def dostuff(config, mailsender, payfile, pdfdir, paidnoop=False, redo=False):
     # TODO: Maybe allow to choose which mandate to pay from?
     mandate = urss.get_mandates()[0]
 
-    try:
-        taxes, taxes_total = urss.declare(total, paidnoop, redo)
-    except (urssaf.AlreadyPaidError, urssaf.PaidIncorrectAmountError):
-        if ispdfapdf:
-            raise
-        logging.warning("Previous declaration failed unexpectedly.")
-        if haspdf:
-            logging.warning("Declaration went ok, but the PDF summary is corrupted.")
-        else:
-            logging.warning("Declaration went ok, but we didn't get the PDF summary.")
-
-        logging.warning("Redoing it from scratch.")
-        redo = True
-        taxes, taxes_total = urss.declare(total, paidnoop, redo)
-
+    taxes, taxes_total = urss.declare(total, redo)
     msg += tax_message(taxes, taxes_total, mandate)
     logging.debug("Message to be send by e-mail:\n%s", msg)
 
@@ -122,7 +112,7 @@ def dostuff(config, mailsender, payfile, pdfdir, paidnoop=False, redo=False):
     pdf = urss.get(pdfurl).content
 
     logging.info("Saving PDF declaration as %r", pdfpath)
-    mode = "wb" if redo else "xb"
+    mode = "wb" if redo != "never" else "xb"
     with open(pdfpath, mode) as fp:
         fp.write(pdf)
 
@@ -142,8 +132,7 @@ def main():
     parser.add_argument("cfgfile", metavar="configfile", help="Fichier de configuration")
     parser.add_argument("--payment", "-p", metavar="file", help="Fichier des factures payées")
     parser.add_argument("--ca-pdf-dir", "-c", metavar="dir", default=".", help="Répertoire où enregistrer le PDF de déclaration du chiffre d'affaire")
-    parser.add_argument("--correctly-paid-noop", action="store_true", help="Ne fait rien si c'est déjà payé")
-    parser.add_argument("--redo-declaration", action="store_true", help="Refait la déclaration si elle existe déjà")
+    parser.add_argument("--redo-declaration", "--redo", choices=["never", "ifchanged", "always"], nargs="?", const="always", default="never", help="Refait la déclaration si elle existe déjà")
     parser.add_argument("--no-error-mail", action="store_true", help="N'envoie pas de mail pour les erreurs")
     parser.add_argument("--verbose", "-v", action="count", help="Augmente le niveau de verbosité")
 
@@ -153,7 +142,6 @@ def main():
     verbose = args.verbose
     payfile = args.payment
     capdfdir = args.ca_pdf_dir
-    paidnoop = args.correctly_paid_noop
     redo = args.redo_declaration
     errormail = not args.no_error_mail
 
@@ -177,16 +165,11 @@ def main():
                                smtpuser, smtppassword, smtpoauthcmd)
 
     try:
-        try:
-            dostuff(config, mailsender, payfile, capdfdir, paidnoop, redo)
-        except urssaf.AlreadyPaidError:
-            if paidnoop:
-                logging.info("Already declared and paid. Ignoring.")
-            else:
-                raise
-
+        dostuff(config, mailsender, payfile, capdfdir, redo)
     except KeyboardInterrupt:
         pass
+    except urssaf.AlreadyPaidError:
+            logging.info("Already declared with correct amount. Ignoring.")
     except:
         logging.exception("Top-level exception:")
         if not errormail:

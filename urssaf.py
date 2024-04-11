@@ -320,7 +320,10 @@ class URSSAF(object):
 
 
 
-    def declare(self, amount, ok_noop=False, update=False):
+    def declare(self, amount, redo="never"):
+        if redo not in ("never", "ifchanged", "always"):
+            raise ValueError(f"Unknown argument value for redo={redo!r}")
+
         if self._state is not None:
             if "error" in self._state:
                 raise RuntimeError("Can't declare anything while in state %r" % self._state)
@@ -333,13 +336,22 @@ class URSSAF(object):
         paymentexpected = (ctx["data"]["paiement"]["attendu"] == "true")
         decl_done = not (declexpected or paymentexpected)
 
-        if decl_done:
+        if decl_done and redo == "always":
+            logging.info("Declaration already done. Redoing it as requested.")
+
+        elif decl_done and redo != "always":
             declared_prev = ctx["data"]["declaration"]["ass"]["ass_autres"]
             if declared_prev == amount:
-                if not update or ok_noop:
-                    raise AlreadyPaidError("Already declared and paid the right amount. Not redoing anything.")
-            elif not update:
-                raise PaidIncorrectAmountError("Declared %s instead of %s, should redo the declaration." % (declared_prev, amount))
+                logging.debug("Declaration already done. Not redoing.")
+                raise AlreadyPaidError("Already declared and paid the right amount. Not redoing anything.")
+            else:
+                logging.info("Declared %d instead of %d.", declared_prev, amount)
+                if redo == "never":
+                    logging.debug("Ignoring declaration discrepancy.")
+                    raise PaidIncorrectAmountError("Declared %s instead of %s, should redo the declaration." % (declared_prev, amount))
+
+                assert redo == "ifchanged" # No other possibility
+                logging.info("Redoing declaration.")
 
 
         ctx["data"]["declaration"]["ass"]["ass_autres"] = amount
