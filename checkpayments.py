@@ -9,12 +9,19 @@ import itertools
 import json
 import locale
 import logging
+import logging.config
+import os
+import sys
 import traceback
 
 import woob.core
 
 import mailer
 import paymentfile
+
+
+
+SELFPATH = os.path.dirname(os.path.realpath(sys.argv[0]))
 
 
 
@@ -178,8 +185,8 @@ def dostuff(config, mailsender, invdir, payfile):
 
 def main():
     locale.setlocale(locale.LC_ALL, '')
-    logfmt = "%(asctime)s %(levelname)s: %(message)s"
-    logging.basicConfig(format=logfmt, level=logging.WARNING)
+    logging.config.fileConfig(os.path.join(SELFPATH, "logconf.ini"), disable_existing_loggers=False)
+
 
     parser = argparse.ArgumentParser(description="Programme de rapprochement bancaire")
     parser.add_argument("cfgfile", metavar="configfile", help="Fichier de configuration")
