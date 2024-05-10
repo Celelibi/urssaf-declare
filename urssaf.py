@@ -73,6 +73,15 @@ class URSSAF(object):
         res.raise_for_status()
         return res
 
+    def request_auth(self, method, url, *args, **kwargs):
+        if self._access_token is None:
+            raise RuntimeError("Must be logged in before using request_auth method")
+
+        headers = {"Authorization": "Bearer " + self._access_token}
+        headers.update(kwargs.pop("headers", {}))
+        res = self.request(method, url, *args, headers=headers, **kwargs)
+        return res
+
     def get(self, url, *args, **kwargs):
         res = self._session.get(url, *args, **kwargs)
         res.raise_for_status()
@@ -89,12 +98,8 @@ class URSSAF(object):
         doc.make_links_absolute()
         return doc
 
-
-
     def post_xhr_json(self, url, *args, **kwargs):
-        headers = {"Authorization": "Bearer " + self._access_token}
-        headers.update(kwargs.pop("headers", {}))
-        res = self.post(url, *args, headers=headers, **kwargs)
+        res = self.request_auth("POST", url, *args, **kwargs)
         return res.json()
 
 
