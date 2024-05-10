@@ -98,6 +98,9 @@ class URSSAF(object):
         doc.make_links_absolute()
         return doc
 
+    def get_auth(self, url, *args, **kwargs):
+        return self.request_auth("GET", url, *args, **kwargs)
+
     def post_xhr_json(self, url, *args, **kwargs):
         res = self.request_auth("POST", url, *args, **kwargs)
         return res.json()
