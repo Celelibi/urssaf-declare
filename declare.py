@@ -188,7 +188,8 @@ def main():
 
         msg = "Exception caught while trying to run the declaration.\n\n"
         msg += traceback.format_exc()
-        mailsender.error(smtpuser, msg)
+        logs = logging_getHandler("memoryHandler").stream.getvalue().encode()
+        mailsender.error(smtpuser, msg, attachments=[("debug.log", logs)])
 
 
 
