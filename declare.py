@@ -108,8 +108,8 @@ def dostuff(config, mailsender, payfile, pdfdir, redo="never"):
     urss.validate_declaration()
     ctx, pdfurl = urss.pay(mandate)
 
-    # We don't need to use the same session to download the PDF, but it doesn't hurt
-    pdf = urss.get(pdfurl).content
+    # We need to be authenticated and send the 'Authorization' header to download the PDF
+    pdf = urss.get_auth(pdfurl).content
 
     logging.info("Saving PDF declaration as %r", pdfpath)
     mode = "wb" if redo != "never" else "xb"
