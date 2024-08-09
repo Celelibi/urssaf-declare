@@ -48,6 +48,7 @@ class URSSAF(object):
 
     def __init__(self, login, pwd):
         self._session = requests.Session()
+        self._session.headers["User-Agent"] = "Mozzarella Firefox/1337.42 because fuck you! That's why."
         retry_status = {
             403, 408, 413, 429, 499,
             500, 501, 502, 503, 504, 509, 511,
