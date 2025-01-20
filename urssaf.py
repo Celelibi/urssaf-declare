@@ -1,4 +1,5 @@
 import binascii
+from collections import Counter
 import json
 import logging
 import random
@@ -156,7 +157,13 @@ class URSSAF(object):
             "j": f'"{config["URL_MODIFIER_ACTIVITE"]}"',
             "te": f'"{config["URL_CESSER_ACTIVITE"]}"',
         }
-        replace.update({"b." + k: f'"{v}"' for k, v in config.items()})
+
+        cnt = Counter()
+        for k in config:
+            c = Counter(re.findall(r'\b(\w+)\.' + re.escape(k), oauthcfg))
+            cnt.update(c)
+        (config_varname, _) = cnt.most_common(1)[0]
+        replace.update({config_varname + "." + k: f'"{v}"' for k, v in config.items()})
 
         search = r'|'.join(r'(?<!\w)' + re.escape(s) + r'(?!\w)' for s in replace.keys())
         oauthcfg = re.sub(search, lambda m: replace[m.group(0)], oauthcfg)
