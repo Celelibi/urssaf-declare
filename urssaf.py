@@ -147,15 +147,9 @@ class URSSAF(object):
         oauthcfg = matching_braces(mainjs[cfgidx:])
         oauthcfg = re.sub(r'(?<=[{,])(\w*):', '"\\1":', oauthcfg)
 
-        # TODO Extract r.version from the js too
         replace = {
             "!0": "true",
             "!1": "false",
-            "O": f'"{self.servicesurl}"',
-            "X": f'"{config["DATE_BASCULE_GUICHET_UNIQUE"]}"',
-            "ne": f'"{config["URL_GUICHET_UNIQUE"]}"',
-            "j": f'"{config["URL_MODIFIER_ACTIVITE"]}"',
-            "te": f'"{config["URL_CESSER_ACTIVITE"]}"',
         }
 
         cnt = Counter()
@@ -164,6 +158,16 @@ class URSSAF(object):
             cnt.update(c)
         (config_varname, _) = cnt.most_common(1)[0]
         replace.update({config_varname + "." + k: f'"{v}"' for k, v in config.items()})
+
+        # Get the shorthand variables as well
+        varsidx = mainjs.rindex(";", 0, cfgidx) + 1
+        shortvars = dict(re.findall(r'(\w+)\s*=\s*([\w.]+),', mainjs[varsidx:cfgidx]))
+        del shortvars[config_varname]
+
+        # ... and the special base URL variable
+        baseurlvar, = re.findall(r'(\w+)\s*=\s*[^,]*\blocation\b[^,]*,', mainjs[varsidx:cfgidx])
+        shortvars[baseurlvar] = json.dumps(self.servicesurl)
+        replace.update({k: replace.get(v, v) for k, v in shortvars.items()})
 
         search = r'|'.join(r'(?<!\w)' + re.escape(s) + r'(?!\w)' for s in replace.keys())
         oauthcfg = re.sub(search, lambda m: replace[m.group(0)], oauthcfg)
