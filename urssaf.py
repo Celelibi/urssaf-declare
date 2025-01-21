@@ -1,5 +1,6 @@
-import binascii
+import base64
 from collections import Counter
+import hashlib
 import json
 import logging
 import random
@@ -62,6 +63,7 @@ class URSSAF(object):
 
         self._config = None
         self._main_config = None
+        self._verif = None
         self._access_token = None
         self._profile_ctx = None
         self._mandates = None
@@ -210,7 +212,7 @@ class URSSAF(object):
 
 
     def _login_url_params(self, oauthcfg):
-        return {
+        res = {
             "response_type": oauthcfg["responseType"],
             "client_id": oauthcfg["clientId"],
             "state": random_string(43),
@@ -218,6 +220,15 @@ class URSSAF(object):
             "scope": oauthcfg["scope"],
             "nonce": random_string(43),
         }
+
+        if res["response_type"] == "code":
+            self._verif = random_string(43).encode()
+            chall = hashlib.sha256(self._verif).digest()
+            chall = base64.urlsafe_b64encode(chall).replace(b"=", b"")
+            res["code_challenge"] = chall
+            res["code_challenge_method"] = "S256"
+
+        return res
 
 
 
@@ -271,12 +282,25 @@ class URSSAF(object):
             raise ValueError("Can't authenticate:" + json.dumps(res))
 
         url = urllib.parse.urlparse(res["redirect"])
-        qs = urllib.parse.parse_qs(url.fragment)
-        self._verify_token(qs["id_token"][0])
-        self._access_token = qs["access_token"][0]
+        if loginparams["response_type"] == "code":
+            qs = urllib.parse.parse_qs(url.query)
+            data = {
+                "grant_type": "authorization_code",
+                "code": qs["code"][0],
+                "redirect_uri": oauthcfg["redirectUri"],
+                "code_verifier": self._verif,
+                "client_id": oauthcfg["clientId"],
+            }
+            res = self.post(oauthcfg["tokenEndpoint"], data=data).json()
+            self._verify_token(res["id_token"])
+            self._access_token = res["access_token"]
 
-        # Nothing very interesting at that URL
-        #self.get(res["redirect"])
+        elif loginparams["response_type"] == "token":
+            qs = urllib.parse.parse_qs(url.fragment)
+            self._verify_token(qs["id_token"][0])
+            self._access_token = qs["access_token"][0]
+        else:
+            raise NotImplementedError(f"OAuth authentication flow {loginparams['response_type']!r} not supported")
 
 
 
