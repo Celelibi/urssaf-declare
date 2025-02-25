@@ -99,7 +99,7 @@ def bank_transactions(cfg, since=None):
         cfg["woobbackendargs"] = cfg["weboobbackendargs"]
         del cfg["weboobbackendargs"]
 
-    boob = woob.core.Weboob()
+    boob = woob.core.Woob()
     boob.update(SilentProgress())
     args = json.loads(cfg["woobbackendargs"])
     args.update({"login": cfg["login"], "password": cfg["password"]})
