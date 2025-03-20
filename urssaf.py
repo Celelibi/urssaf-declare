@@ -41,6 +41,27 @@ def matching_braces(s):
 
 
 
+def enclosing_opening_brace(s, start):
+    if start is None:
+        start = len(s) - 1
+
+    pos = start
+    cnt = int(s[start] == "{")
+    while pos >= 0:
+        c = s[pos]
+        if c == "}":
+            cnt += 1
+        elif c == "{":
+            if cnt == 0:
+                return pos
+            cnt -= 1
+
+        pos -= 1
+
+    raise ValueError("No matching opening braces")
+
+
+
 class URSSAF(object):
     baseurl = "https://www.autoentrepreneur.urssaf.fr/"
     servicesurl = baseurl + "services/"
@@ -145,7 +166,7 @@ class URSSAF(object):
         config = self._get_config()
         mainjs = self._get_mainjs()
         oauthidx = mainjs.index("oauth:")
-        cfgidx = mainjs.rindex("{", 0, oauthidx)
+        cfgidx = enclosing_opening_brace(mainjs, oauthidx)
         oauthcfg = matching_braces(mainjs[cfgidx:])
         oauthcfg = re.sub(r'(?<=[{,])(\w*):', '"\\1":', oauthcfg)
 
