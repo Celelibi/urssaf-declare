@@ -184,7 +184,7 @@ class URSSAF(object):
 
         # Get the shorthand variables as well
         varsidx = mainjs.rindex(";", 0, cfgidx) + 1
-        shortvars = dict(re.findall(r'(\w+)\s*=\s*([\w.]+),', mainjs[varsidx:cfgidx]))
+        shortvars = dict(re.findall(r'([\w$]+)\s*=\s*([\w.$]+),', mainjs[varsidx:cfgidx]))
         del shortvars[config_varname]
 
         # ... and the special base URL variable
